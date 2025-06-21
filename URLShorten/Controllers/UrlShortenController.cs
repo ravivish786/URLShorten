@@ -16,6 +16,26 @@ namespace URLShorten.Controllers
             _urlManager = urlManager;
         }
 
+
+        [HttpGet]
+        [Route("health")]
+        public IActionResult HealthCheck()
+        {
+            return Ok("Service is running");
+        }
+
+        [HttpGet]
+        [Route("all")]
+        public async Task<IActionResult> GetAllAsync()
+        {
+            var result = await _urlManager.GetAllAsync();
+            if (!result.Success)
+            {
+                return NotFound(result.Message);
+            }
+            return Ok(result.Data);
+        }
+
         [HttpGet]
         [Route("{shortUrl}")]
         public async Task<IActionResult> GetAsync(string shortUrl)
@@ -29,7 +49,6 @@ namespace URLShorten.Controllers
             {
                 return NotFound(result.Message);
             }
-            //return Ok(result);
             return Redirect(result.Data.Url);
         }
 

@@ -1,4 +1,5 @@
-﻿using URLShorten.Database;
+﻿using Microsoft.EntityFrameworkCore;
+using URLShorten.Database;
 using URLShorten.Dto;
 using URLShorten.Interface;
 
@@ -13,6 +14,16 @@ namespace URLShorten.Service
             _context = context;
         }
 
+        public async Task<Result<List<ShortUrlDto>>> GetAllAsync()
+        {
+            var data = await _context.ShortUrls.ToListAsync();
+            if (data == null || !data.Any())
+            {
+                return Result<List<ShortUrlDto>>.Fail("No short URLs found.");
+            }
+            var result = data.Select(MapData).ToList();
+            return Result<List<ShortUrlDto>>.Ok(result, "Short URLs retrieved successfully.");
+        }
 
         public async Task<Result<ShortUrlDto>> GetAsync(string shortUrl)
         {

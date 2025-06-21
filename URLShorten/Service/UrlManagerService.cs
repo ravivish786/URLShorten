@@ -5,9 +5,10 @@ namespace URLShorten.Service
 {
     public class UrlManagerService : IUrlManager
     {
-        public Task<ShortUrlDto> CreateAsync(string longUrl)
+        private static readonly Dictionary<string, ShortUrlDto> UrlDatabase = new();
+        public  Task<ShortUrlDto> CreateAsync(string longUrl)
         {
-            throw new NotImplementedException();
+            
         }
 
         public Task<bool> DeleteAsync(string shortUrl)
@@ -29,5 +30,20 @@ namespace URLShorten.Service
         {
             throw new NotImplementedException();
         }
+
+
+
+
+        #region Utility Methods
+
+        private string GenerateShortUrl()
+        {
+            long tickes = DateTime.UtcNow.Ticks;
+            string base64 = Convert.ToBase64String(BitConverter.GetBytes(tickes));
+            base64 = base64.Replace("/", "_").Replace("+", "-").TrimEnd('=');
+            return base64;
+        }
+
+        #endregion
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using URLShorten.Dto;
 using URLShorten.Interface;
 
 namespace URLShorten.Controllers
@@ -26,9 +27,24 @@ namespace URLShorten.Controllers
 
         [HttpGet]
         [Route("all")]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            var result = await _urlManager.GetAllAsync();
+            var result = await _urlManager.GetAllAsync(cancellationToken);
+            if (!result.Success)
+            {
+                return NotFound(result.Message);
+            }
+            return Ok(result.Data);
+        }
+
+        [HttpGet("{shortUrl}")]
+        public async Task<IActionResult> GetAsync(string shortUrl, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(shortUrl))
+            {
+                return BadRequest("Short URL cannot be empty.");
+            }
+            var result = await _urlManager.GetAsync(shortUrl, cancellationToken);
             if (!result.Success)
             {
                 return NotFound(result.Message);
@@ -37,30 +53,14 @@ namespace URLShorten.Controllers
         }
 
         [HttpGet]
-        [Route("{shortUrl}")]
-        public async Task<IActionResult> GetAsync(string shortUrl)
-        {
-            if (string.IsNullOrWhiteSpace(shortUrl))
-            {
-                return BadRequest("Short URL cannot be empty.");
-            }
-            var result = await _urlManager.GetAsync(shortUrl);
-            if (!result.Success)
-            {
-                return NotFound(result.Message);
-            }
-            return Redirect(result.Data.Url);
-        }
-
-        [HttpGet]
         [Route("{shortUrl}/stats")]
-        public async Task<IActionResult> GetStatisticsAsync(string shortUrl)
+        public async Task<IActionResult> GetStatisticsAsync(string shortUrl, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(shortUrl))
             {
                 return BadRequest("Short URL cannot be empty.");
             }
-            var result = await _urlManager.GetStatisticsAsync(shortUrl);
+            var result = await _urlManager.GetStatisticsAsync(shortUrl, cancellationToken);
             if (!result.Success)
             {
                 return NotFound(result.Message);
@@ -69,31 +69,39 @@ namespace URLShorten.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAsync([FromBody] string Url)
+        public async Task<IActionResult> CreateAsync([FromBody] ShortUrlRequest request, CancellationToken cancellationToken = default)
         {
-            var result = IsValidUrl(Url);
+            var result = IsValidUrl(request.Url);
             if (!result.IsValid)
             {
                 return BadRequest(result.Message);
             }
-            var created  = await _urlManager.CreateAsync(Url);
+            var created  = await _urlManager.CreateAsync(request.Url, cancellationToken);
             if (!created.Success)
             {
                 return BadRequest(created.Message);
             }
-            return CreatedAtAction(nameof(GetAsync), new { shortUrl = created.Data.ShortCode }, created.Data);
+            //return CreatedAtAction(nameof(GetAsync), new { shortUrl = created.Data.ShortCode }, created.Data);
+
+            // Generate the short URL using the request scheme and host
+
+            var shortUrl = $"{Request.Scheme}://{Request.Host}/api/UrlShorten/{created.Data.ShortCode}";
+
+            Response.Headers.Location = shortUrl;
+
+            return StatusCode(StatusCodes.Status201Created, created.Data);
         }
 
         [HttpPut]
         [Route("{shortUrl}")]
-        public async Task<IActionResult> UpdateAsync(string shortUrl, [FromBody] string Url)
+        public async Task<IActionResult> UpdateAsync(string shortUrl, [FromBody] ShortUrlRequest request, CancellationToken cancellationToken = default)
         {
-            var result = IsValidUrl(Url);
+            var result = IsValidUrl(request.Url);
             if (!result.IsValid)
             {
                 return BadRequest(result.Message);
             }
-            var updated = await _urlManager.UpdateAsync(shortUrl, Url);
+            var updated = await _urlManager.UpdateAsync(shortUrl, request.Url, cancellationToken);
             if (!updated.Success)
             {
                 return NotFound(updated.Message);
@@ -104,13 +112,13 @@ namespace URLShorten.Controllers
 
         [HttpDelete]
         [Route("{shortUrl}")]
-        public async Task<IActionResult> DeleteAsync(string shortUrl)
+        public async Task<IActionResult> DeleteAsync(string shortUrl, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(shortUrl))
             {
                 return BadRequest("Short URL cannot be empty.");
             }
-            var deleted = await _urlManager.DeleteAsync(shortUrl);
+            var deleted = await _urlManager.DeleteAsync(shortUrl, cancellationToken);
             if (!deleted.Success)
             {
                 return NotFound(deleted.Message);

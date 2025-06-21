@@ -7,6 +7,9 @@
         public string ShortCode { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; } = null;
-        public int AccessCount { get; set; } = 0;
+        //public int AccessCount { get; set; } = 0;
+
+        // Foreign key navigation
+        public ICollection<UrlStatistics> Statistics { get; set; } = new List<UrlStatistics>();
     }
 }

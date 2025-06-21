@@ -4,10 +4,10 @@ namespace URLShorten.Interface
 {
     public interface IUrlManager
     {
-        Task<ShortUrlDto> CreateAsync(string longUrl);
-        Task<ShortUrlDto> UpdateAsync(string shortUrl, string longUrl);
-        Task<bool> DeleteAsync(string shortUrl);
-        Task<ShortUrlDto?> GetAsync(string shortUrl);
-        Task<ShortUrlStatisticsDto?> GetStatisticsAsync(string shortUrl);
+        Task<Result<ShortUrlDto>> CreateAsync(string longUrl);
+        Task<Result<ShortUrlDto>> UpdateAsync(string shortUrl, string longUrl);
+        Task<Result<bool>> DeleteAsync(string shortUrl);
+        Task<Result<ShortUrlDto>> GetAsync(string shortUrl);
+        Task<Result<ShortUrlStatisticsDto>> GetStatisticsAsync(string shortUrl);
     }
 }

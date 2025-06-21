@@ -25,12 +25,12 @@ namespace URLShorten.Controllers
                 return BadRequest("Short URL cannot be empty.");
             }
             var result = await _urlManager.GetAsync(shortUrl);
-            if (result == null)
+            if (!result.Success)
             {
-                return NotFound("Short URL not found.");
+                return NotFound(result.Message);
             }
             //return Ok(result);
-            return Redirect(result.Url);
+            return Redirect(result.Data.Url);
         }
 
         [HttpGet]
@@ -41,12 +41,12 @@ namespace URLShorten.Controllers
             {
                 return BadRequest("Short URL cannot be empty.");
             }
-            var stats = await _urlManager.GetStatisticsAsync(shortUrl);
-            if (stats == null)
+            var result = await _urlManager.GetStatisticsAsync(shortUrl);
+            if (!result.Success)
             {
-                return NotFound("Short URL not found.");
+                return NotFound(result.Message);
             }
-            return Ok(stats);
+            return Ok(result);
         }
 
         [HttpPost]
@@ -58,11 +58,11 @@ namespace URLShorten.Controllers
                 return BadRequest(result.Message);
             }
             var created  = await _urlManager.CreateAsync(Url);
-            if (created == null)
+            if (!created.Success)
             {
-                return BadRequest("Failed to create short URL.");
+                return BadRequest(created.Message);
             }
-            return CreatedAtAction(nameof(GetAsync), new { shortUrl = created.ShortCode }, result);
+            return CreatedAtAction(nameof(GetAsync), new { shortUrl = created.Data.ShortCode }, created.Data);
         }
 
         [HttpPut]
@@ -75,11 +75,11 @@ namespace URLShorten.Controllers
                 return BadRequest(result.Message);
             }
             var updated = await _urlManager.UpdateAsync(shortUrl, Url);
-            if (updated == null)
+            if (!updated.Success)
             {
-                return NotFound("Short URL not found.");
+                return NotFound(updated.Message);
             }
-            return Ok(updated);
+            return Ok(updated.Data);
         }
 
 
@@ -92,9 +92,9 @@ namespace URLShorten.Controllers
                 return BadRequest("Short URL cannot be empty.");
             }
             var deleted = await _urlManager.DeleteAsync(shortUrl);
-            if (!deleted)
+            if (!deleted.Success)
             {
-                return NotFound("Short URL not found.");
+                return NotFound(deleted.Message);
             }
             return NoContent();
         }

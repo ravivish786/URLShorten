@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using URLShorten.Database;
 using URLShorten.Interface;
 using URLShorten.Service;
 
@@ -7,6 +9,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// in memory data base 
+builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("UrlDb"));
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IUrlManager, UrlManagerService>();
